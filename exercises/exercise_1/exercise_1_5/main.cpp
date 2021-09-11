@@ -4,13 +4,16 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
-
+#include <math.h>
+#include <chrono>
+#include <thread>
 
 // function declarations
 // ---------------------
 void createArrayBuffer(const std::vector<float> &array, unsigned int &VBO);
-void setupShape(unsigned int shaderProgram, unsigned int &VAO, unsigned int &vertexCount);
+unsigned int setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int &indexCount, std::vector<float> &buffer, unsigned int pointCount);
 void draw(unsigned int shaderProgram, unsigned int VAO, unsigned int vertexCount);
+void rotate(std::vector<float> &buffer, unsigned int pointCount, unsigned int offset, unsigned int posVBO);
 
 
 // glfw functions
@@ -130,9 +133,12 @@ int main()
     // setup vertex array object (VAO)
     // -------------------------------
     unsigned int VAO, vertexCount;
+    unsigned int pointCount = 360;
+    unsigned int offset = 0;
     // generate geometry in a vertex array object (VAO), record the number of vertices in the mesh,
     // tells the shader how to read it
-    setupShape(shaderProgram, VAO, vertexCount);
+    auto vertexBuffer = std::vector<float>();
+    unsigned int posVBO = setupShape(shaderProgram, VAO, vertexCount, vertexBuffer, pointCount);
 
 
     // render loop
@@ -147,12 +153,16 @@ int main()
         glClearColor(.2f, .2f, .2f, 1.0f); // background
         glClear(GL_COLOR_BUFFER_BIT); // clear the framebuffer
 
+        rotate(vertexBuffer, pointCount, offset, posVBO);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         draw(shaderProgram, VAO, vertexCount);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window); // we normally use 2 frame buffers, a back (to draw on) and a front (to show on the screen)
         glfwPollEvents();
+        offset = (offset + 1) % 360;
     }
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
@@ -173,28 +183,52 @@ void createArrayBuffer(const std::vector<float> &array, unsigned int &VBO){
     glBufferData(GL_ARRAY_BUFFER, array.size() * sizeof(GLfloat), &array[0], GL_STATIC_DRAW);
 }
 
-
 // create the geometry, a vertex array object representing it, and set how a shader program should read it
 // -------------------------------------------------------------------------------------------------------
-void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int &vertexCount){
+unsigned int setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int &indexCount, std::vector<float> &buffer, unsigned int pointCount){
 
-    unsigned int posVBO, colorVBO;
-    createArrayBuffer(std::vector<float>{
-            // position
-            0.0f,  0.0f, 0.0f,
-            0.5f,  0.0f, 0.0f,
-            0.5f,  0.5f, 0.0f
-    }, posVBO);
+    unsigned int posVBO, colorVBO, EBO;
+    auto colorBuffer = std::vector<float>();
+    auto indices = std::vector<int>();
 
-    createArrayBuffer( std::vector<float>{
-            // color
-            1.0f,  0.0f, 0.0f,
-            1.0f,  0.0f, 0.0f,
-            1.0f,  0.0f, 0.0f
-    }, colorVBO);
+    buffer.push_back(0.0f);
+    buffer.push_back(0.0f);
+    buffer.push_back(0.0f);
 
+    auto iteration = 360 / pointCount;
+    colorBuffer.push_back(cos(( iteration) * 3.14159265358979323846f / 180.0f));
+    colorBuffer.push_back(sin(( iteration) * 3.14159265358979323846f / 180.0f));
+    colorBuffer.push_back((cos(( iteration) * 3.14159265358979323846f / 180.0f) + sin(( iteration) * 3.14159265358979323846f / 180.0f))/2);
+
+    for (int i = 1; i <= pointCount+1; i++) {
+
+        std::cout << i << "\n";
+
+        buffer.push_back(cos((i * iteration) * 3.14159265358979323846f / 180.0f)/2);
+        buffer.push_back(sin((i * iteration) * 3.14159265358979323846f / 180.0f)/2);
+        buffer.push_back(0.0f);
+
+        indices.push_back(i);
+        indices.push_back(i-1);
+        indices.push_back(0);
+
+        std::cout << sin((i * iteration) * 3.14159265358979323846f / 180.0f/2) << "\n";
+        std::cout << cos((i * iteration) * 3.14159265358979323846f / 180.0f/2) << "\n";
+
+
+
+        colorBuffer.push_back(cos((i * iteration) * 3.14159265358979323846f / 180.0f));
+        colorBuffer.push_back(sin((i * iteration) * 3.14159265358979323846f / 180.0f));
+        colorBuffer.push_back(1.0f);
+    }
+
+    createArrayBuffer(buffer, posVBO);
+
+    createArrayBuffer( colorBuffer, colorVBO);
+
+    glGenBuffers(1, &EBO);
     // tell how many vertices to draw
-    vertexCount = 3;
+    indexCount = indices.size();
 
     // create a vertex array object (VAO) on OpenGL and save a handle to it
     glGenVertexArrays(1, &VAO);
@@ -214,12 +248,28 @@ void setupShape(const unsigned int shaderProgram,unsigned int &VAO, unsigned int
     // set vertex shader attribute "aColor"
     glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GL_UNSIGNED_INT), &indices[0], GL_STATIC_DRAW);
     int colorSize = 3;
     int colorAttributeLocation = glGetAttribLocation(shaderProgram, "aColor");
 
     glEnableVertexAttribArray(colorAttributeLocation);
     glVertexAttribPointer(colorAttributeLocation, colorSize, GL_FLOAT, GL_FALSE, 0, 0);
+    return posVBO;
+}
 
+//assumes the buffer are only vertices
+void rotate(std::vector<float> &buffer, unsigned int pointCount, unsigned int offset, unsigned int posVBO){
+    auto iteration = 360 / pointCount;
+
+    for (int i = 1; i <= (pointCount+1) * 3; i += 3) {
+        buffer[i-1] = cos((((i/3) * iteration) + offset) * 3.14159265358979323846f / 180.0f)/2;
+        buffer[i]  = (sin((((i/3) * iteration) + offset) * 3.14159265358979323846f / 180.0f)/2);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, posVBO);
+    glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(GLfloat), NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(GLfloat), &buffer[0], GL_DYNAMIC_DRAW);
 }
 
 
@@ -231,7 +281,7 @@ void draw(const unsigned int shaderProgram, const unsigned int VAO, const unsign
     // bind vertex array object
     glBindVertexArray(VAO);
     // draw geometry
-    glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+    glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 0);
 }
 
 

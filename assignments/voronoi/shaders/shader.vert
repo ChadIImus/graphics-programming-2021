@@ -10,11 +10,17 @@
 // You have to set an 'uniform vec2' to receive the position offset of the object
 // CODE HERE
 
+layout (location = 0) in vec3 aPos;
+out float zPos;
+uniform vec2 offset;
+
 void main()
 {
     // TODO voronoi 1.3
     // Set the vertex->fragment shader 'out' variable
     // CODE HERE
+    gl_Position = vec4(aPos.x + offset.x, aPos.y + offset.y, aPos.z, 1.0);
+    zPos = aPos.z;
     // Set the 'gl_Position' built-in variable using a 'vec4(vec3 position you compute, 1.0)',
     // Remeber to use the 'uniform vec2' to move the vertex before you set 'gl_Position'.
     // CODE HERE
