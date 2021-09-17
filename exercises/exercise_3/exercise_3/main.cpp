@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <algorithm>
 
 #include "glmutils.h"
 
@@ -50,8 +51,8 @@ Shader* shaderProgram;
 float planeHeading = 0.0f;
 float tiltAngle = 0.0f;
 float planeSpeed = 0.005f;
+int planeRotation = 0;
 glm::vec2 planePosition = glm::vec2(0.0,0.0);
-
 
 int main()
 {
@@ -120,7 +121,11 @@ int main()
         currentTime = appTime.count();
 
         processInput(window);
-
+        planePosition.x = (planePosition.x + cos(glm::radians((float)planeRotation))/100);
+        planePosition.y = (planePosition.y + sin(glm::radians((float)planeRotation))/100);
+        std::cout << planePosition.x << "\n";
+        std::cout << planePosition.y << "\n";
+        std::cout << planeRotation << "\n";
         glClearColor(0.5f, 0.5f, 1.0f, 1.0f);
 
         // NEW!
@@ -156,11 +161,40 @@ void drawPlane(){
     //  you will need to transform the pose of the pieces of the plane by manipulating glm matrices and uploading a
     //  uniform mat4 model matrix to the vertex shader
 
+
+    int modelLocation = glGetUniformLocation(shaderProgram->ID, "model");
+    glm::mat4 trans = glm::mat4(1.0f);
+
+    trans = glm::translate(trans, glm::vec3(planePosition.x,planePosition.y,0));
+    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(trans));
+
     // body
     drawSceneObject(planeBody);
-    // right wing
+
+    //wings
     drawSceneObject(planeWing);
 
+    trans = glm::scale(trans, glm::vec3(-1.0f, 1.0f, 1.0f));
+    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(trans));
+    drawSceneObject(planeWing);
+
+    //smaller fins
+    trans = glm::scale(trans, glm::vec3(0.5f, 0.5f, 0.5f));
+    trans = glm::translate(trans, glm::vec3(0.0f,-1.0f/10.0,0));
+    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(trans));
+    drawSceneObject(planeWing);
+
+    trans = glm::scale(trans, glm::vec3(-1.0f, 1.0f, 1.0f));
+    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(trans));
+    drawSceneObject(planeWing);
+
+    //propeller
+
+    trans = glm::translate(trans, glm::vec3(0.0f,2.115f/10.0,0));
+    trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(1.0, 0.0, 0.0));
+    trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0));
+    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(trans));
+    drawSceneObject(planePropeller);
 }
 
 void drawSceneObject(SceneObject obj){
@@ -168,22 +202,42 @@ void drawSceneObject(SceneObject obj){
     glDrawElements(GL_TRIANGLES,  obj.vertexCount, GL_UNSIGNED_INT, 0);
 }
 
+float divide(float value){
+    return value / 10;
+}
+
+std::vector<float> divideBy10(std::vector<float> vec){
+    auto returnValue = std::vector<float>{};
+    std::transform(begin(vec),end(vec), std::back_inserter(returnValue),divide);
+    return returnValue;
+}
+
 void setup(){
 
     // TODO 3.3 you will need to load one additional object.
     PlaneModel &airplane = PlaneModel::getInstance();
     // initialize plane body mesh objects
-    planeBody.VAO = createVertexArray(airplane.planeBodyVertices,
+    auto planeBodyVert = divideBy10(airplane.planeBodyVertices);
+    planeBody.VAO = createVertexArray(planeBodyVert,
                                       airplane.planeBodyColors,
                                       airplane.planeBodyIndices);
     planeBody.vertexCount = airplane.planeBodyIndices.size();
 
     // initialize plane wing mesh objects
-    planeWing.VAO = createVertexArray(airplane.planeWingVertices,
+
+    auto planeWingVert = divideBy10(airplane.planeWingVertices);
+    planeWing.VAO = createVertexArray(planeWingVert,
                                       airplane.planeWingColors,
                                       airplane.planeWingIndices);
     planeWing.vertexCount = airplane.planeWingIndices.size();
 
+
+    // initialize plane propeller mesh objects
+    auto planePropellerVert = divideBy10(airplane.planePropellerVertices);
+    planePropeller.VAO = createVertexArray(planePropellerVert,
+                                      airplane.planePropellerColors,
+                                      airplane.planePropellerIndices);
+    planePropeller.vertexCount = airplane.planePropellerIndices.size();
 }
 
 
@@ -242,6 +296,13 @@ void processInput(GLFWwindow *window)
     // if GLFW_KEY_A is GLFW_PRESS, plane turn left
     // if GLFW_KEY_D is GLFW_PRESS, plane turn right
 
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS){
+        planeRotation--;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS){
+        planeRotation++;
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
