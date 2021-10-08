@@ -31,7 +31,7 @@ unsigned int createArrayBuffer(const std::vector<float> &array);
 unsigned int createElementArrayBuffer(const std::vector<unsigned int> &array);
 unsigned int createVertexArray(const std::vector<float> &positions, const std::vector<float> &colors, const std::vector<unsigned int> &indices);
 void setup();
-void drawObject();
+void drawObject(GLFWwindow* window);
 glm::mat4 viewProjection();
 
 // glfw and input functions
@@ -57,6 +57,8 @@ Shader* shaderProgram;
 float currentTime;
 glm::vec3 clickStart(0.0f), clickEnd(0.0f);
 glm::mat4 storedRotation(1.0f);
+
+glm::vec3 cameraLocation = glm::vec3(0,0,2);
 
 bool g_andersonTrackball = false;
 bool g_perspectiveProjection = false;
@@ -132,7 +134,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shaderProgram->use();
-        drawObject();
+        drawObject(window);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -206,22 +208,24 @@ glm::mat4 trackballRotation(){
     return rotation;
 }
 
-glm::mat4 viewProjection(){
+glm::mat4 viewProjection(GLFWwindow* window){
 
     if (g_perspectiveProjection) {
         // TODO 5.1 - create a view matrix, that transforms points in the world coordinates to the camera coordinates
         //  you can use glm::lookat for that, set position to (0,0,2) and the camera forward to (0,0,-1)
-
+        auto thing = glm::lookAt(cameraLocation, glm::vec3(0,0,-1), glm::vec3(0,1,0));
 
         // TODO 5.1 - create a projection using the glm::perspectiveFov function,
         //  and use it to view the object (i.e. multiply with model)
-
+        int xScreen, yScreen;
+        glfwGetWindowSize(window, &xScreen, &yScreen);
+        auto thing2 = glm::perspectiveFov(glm::radians(70.f),(float) xScreen,(float) yScreen,0.1f,10.f);
 
         // TODO 5.1 - multiply the matrices together in the right order to return the viewprojection matrix,
         //  you want the final matrix to first move points into camera coordinates, and then project
         //  press 6 to see the result
 
-        return glm::mat4(1);
+        return thing2 * thing;
     }
     else {
         // ortographic in the ndc range
@@ -233,14 +237,14 @@ glm::mat4 viewProjection(){
 }
 
 
-void drawObject(){
+void drawObject(GLFWwindow* window){
 
     // final object transformation
     // scale -> rotations
     glm::mat4 model = trackballRotation() * storedRotation;
 
 
-    glm::mat4 viewProj = viewProjection();
+    glm::mat4 viewProj = viewProjection(window);
     glm::mat4 MVP = viewProj * model;
 
     if(!g_airplane) {
@@ -386,6 +390,8 @@ void button_input_callback(GLFWwindow* window, int button, int action, int mods)
 }
 
 void key_input_callback(GLFWwindow* window, int button, int other,int action, int mods){
+    if (button == GLFW_KEY_W)
+        cameraLocation = cameraLocation + glm::vec3(0.1f,0,0);
     if (button == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     if (button == GLFW_KEY_1 && action == GLFW_PRESS)

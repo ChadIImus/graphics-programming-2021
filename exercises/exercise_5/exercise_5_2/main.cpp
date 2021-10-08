@@ -162,6 +162,8 @@ void drawObjects(){
     // or if we want ot match the multiplication order (projection * view), we could read
     // perspective_projection_from_view <- view_from_world
     glm::mat4 projection = glm::perspectiveFov(70.0f, (float)SCR_WIDTH, (float)SCR_HEIGHT, .01f, 100.0f);
+    std::cout << camPosition << "\n";
+    std::cout << camForward << "\n";
     glm::mat4 view = glm::lookAt(camPosition, camPosition + camForward, glm::vec3(0,1,0));
     glm::mat4 viewProjection = projection * view;
 
@@ -312,6 +314,14 @@ void processInput(GLFWwindow *window) {
         glfwSetWindowShouldClose(window, true);
 
     // TODO move the camera position based on keys pressed (use either WASD or the arrow keys)
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camPosition = camPosition + glm::vec3(0,0,-0.1f);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camPosition = camPosition + glm::vec3(0,0,0.1f);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camForward = camForward + glm::vec3(-0.1f,0,0);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camForward = camForward + glm::vec3(0.1f,0,0);
 
 }
 
