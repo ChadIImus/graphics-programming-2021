@@ -75,9 +75,24 @@ float ShadowCalculation(vec4 lightSpacePos)
 
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 {
-    float height = texture(texture_depth1, texCoords).r;
-    vec2 p = viewDir.xy / viewDir.z * (height * heightScale);
-    return texCoords - p;
+    float layerDepth = 1.0 / layerCount;
+
+    float currentDepth = 0.0;
+
+    vec2 p = viewDir.xy  * heightScale;
+    vec2 deltaTexCoords = p / layerCount;
+
+    vec2 currentTexCoords = texCoords;
+    float currentDepthMapValue = texture(texture_depth1, currentTexCoords).r;
+
+    while(currentDepth < currentDepthMapValue)
+    {
+        currentTexCoords -= deltaTexCoords;
+        currentDepthMapValue = texture(texture_depth1, currentTexCoords).r;
+        currentDepth += layerDepth;
+    }
+
+    return currentTexCoords;
 }
 
 void main()

@@ -41,19 +41,29 @@ float ShadowCalculation(vec4 lightSpacePos)
 {
    // TODO exercise 12.1 - correct sampling coordinate
    //  lightSpacePos is in the [-1, 1] range, but textures are sampled in the [0, 1]
+   vec3 shadowMapSpacePos = lightSpacePos.xyz * 0.5 + 0.5;
 
 
    float shadow = 0.0;
    if(!softShadows){
       // TODO exercise 12.1 - single sample shadow
       //  mind that, when you sample the shadowMap texture, the depth information is contained in the red channel
+      float depth = texture(shadowMap, shadowMapSpacePos.xy).r;
 
       // TODO exercise 12.2 - use the shadowBias to apply an offset to the sampled distance
-
+      shadow = depth + shadowBias < shadowMapSpacePos.z ? 1.0 : 0.0;
    }
    else {
       // TODO exercise 12.3 - sample and test multiple texels and set shadow to the weighted contribution of all shadow tests
-
+      vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+      for(int x = -1; x <= 1; ++x) {
+         for (int y = -1; y <= 1; ++y) {
+            vec2 offset = vec2(texelSize.x * x, texelSize.y * y);
+            float depth = texture(shadowMap, shadowMapSpacePos.xy + offset).r;
+            shadow += depth + shadowBias < shadowMapSpacePos.z ? 1.0 : 0.0;
+         }
+      }
+      shadow /= 9.0;
    }
 
    return shadow;
@@ -108,5 +118,5 @@ void main()
    float shadow = ShadowCalculation(fs_in.Pos_lightSpace);
 
    // TODO exercise 12.1 - use the shadow value to modulate the diffuse and specular colors of the fragment
-   FragColor = vec4(ambient * ambientOcclusion + (diffuse + specular) * ambientOcclusion, albedo.a);
+   FragColor = vec4(ambient * ambientOcclusion + (diffuse + specular) * ambientOcclusion * (1.0f - shadow), albedo.a);
 }

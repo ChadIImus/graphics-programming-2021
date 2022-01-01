@@ -52,7 +52,7 @@ void main() {
 
    // TODO exercise 12.1 - transform the vertex position (vertex variable) from local space to light space
    //  hint - you will need two matrices for that
-   vs_out.Pos_lightSpace = vec4(1.0);
+   vs_out.Pos_lightSpace = lightSpaceMatrix *  model * vec4(vertex, 1.0);
 
    // final vertex transform (for opengl rendering)
    gl_Position = projection * view * model * vec4(vertex, 1.0);

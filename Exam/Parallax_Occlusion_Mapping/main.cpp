@@ -39,7 +39,14 @@ const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
 
 // global variables used for rendering
 // -----------------------------------
+
+//parallax shading
 Shader* sceneShader;
+Shader* normalShader;
+Shader* parallaxShader1;
+Shader* parallaxShader2;
+Shader* parallaxShader3;
+
 Model* carPaint;
 Model* carBody;
 Model* carInterior;
@@ -68,6 +75,10 @@ bool isPaused = false; // used to stop camera movement when GUI is open
 // parameters that can be set in our GUI
 // -------------------------------------
 struct Config {
+    //parallax mapping
+    int layerCount = 10;
+    float heightScale = 0.1;
+
     // ambient light
     glm::vec3 ambientLightColor = {1.0f, 1.0f, 1.0f};
     float ambientLightIntensity = 0.25f;
@@ -93,8 +104,6 @@ struct Config {
 
 } config;
 
-
-
 int main()
 {
     // glfw: initialize and configure
@@ -118,6 +127,7 @@ int main()
         glfwTerminate();
         return -1;
     }
+
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, cursor_input_callback);
@@ -135,9 +145,16 @@ int main()
     }
 
 
+
+
     // init shaders and models
-    sceneShader = new Shader("shaders/shader.vert", "shaders/parallax.frag");
-	carPaint = new Model("car/Paint_LOD0.obj");
+    parallaxShader1 = new Shader("shaders/shader.vert", "shaders/parallax.frag");
+    parallaxShader2 = new Shader("shaders/shader.vert", "shaders/parallax2.frag");
+    parallaxShader3 = new Shader("shaders/shader.vert", "shaders/parallax3.frag");
+    normalShader = new Shader("shaders/shader.vert", "shaders/shader.frag");
+
+    sceneShader = normalShader;
+    carPaint = new Model("car/Paint_LOD0.obj");
 	carBody = new Model("car/Body_LOD0.obj");
 	carLight = new Model("car/Light_LOD0.obj");
 	carInterior = new Model("car/Interior_LOD0.obj");
@@ -215,6 +232,15 @@ int main()
         lastFrame = currentFrame;
 
         processInput(window);
+        if(glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS){
+            sceneShader = parallaxShader1;
+        } else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS){
+            sceneShader = parallaxShader2;
+        } else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS){
+            sceneShader = parallaxShader3;
+        } else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
+            sceneShader = normalShader;
+        }
 
         // clear buffers
         glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
@@ -311,6 +337,11 @@ void renderScene(GLFWwindow* window){
     // setup scene shader
     sceneShader->use();
 
+    //parallax uniforms
+
+    sceneShader->setInt("layerCount",config.layerCount);
+    sceneShader->setFloat("heightScale",config.heightScale);
+
     // shadow uniforms
     sceneShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
     sceneShader->setInt("shadowMap", 5);
@@ -348,6 +379,10 @@ void drawGui(){
 
     {
         ImGui::Begin("Settings");
+
+        ImGui::Text("Parallax mapping: ");
+        ImGui::SliderInt("layer count", &config.layerCount, 0, 1000);
+        ImGui::SliderFloat("height scale", &config.heightScale, 0.0f, 1.0f);
 
         ImGui::Text("Ambient light: ");
         ImGui::ColorEdit3("ambient light color", (float*)&config.ambientLightColor);
