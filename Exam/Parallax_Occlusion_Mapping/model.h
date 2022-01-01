@@ -163,6 +163,10 @@ private:
         std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_ambient");
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
+        // 4. ambient maps
+        std::vector<Texture> depthMaps = loadMaterialTextures(material, aiTextureType_DISPLACEMENT, "texture_depth");
+        textures.insert(textures.end(), depthMaps.begin(), depthMaps.end());
+
         // return a mesh object created from the extracted mesh data
         return Mesh(vertices, indices, textures);
     }

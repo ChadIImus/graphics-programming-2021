@@ -110,10 +110,11 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Exam project - Parallax occlusion mapping", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Exercise 12 - Shadow mapping", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
+        //std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
@@ -135,14 +136,14 @@ int main()
 
 
     // init shaders and models
-    sceneShader = new Shader("shaders/shader.vert", "shaders/shader.frag");
+    sceneShader = new Shader("shaders/shader.vert", "shaders/parallax.frag");
 	carPaint = new Model("car/Paint_LOD0.obj");
 	carBody = new Model("car/Body_LOD0.obj");
 	carLight = new Model("car/Light_LOD0.obj");
 	carInterior = new Model("car/Interior_LOD0.obj");
 	carWindow = new Model("car/Windows_LOD0.obj");
 	carWheel = new Model("car/Wheel_LOD0.obj");
-	floorModel = new Model("floor/floor.obj");
+	floorModel = new Model("floor/bricks.obj");
     skyboxShader = new Shader("shaders/skybox.vert", "shaders/skybox.frag");
     simpleDepthShader = new Shader("shaders/shadowmapping_depth.vert", "shaders/shadowmapping_depth.frag");
 
@@ -406,6 +407,7 @@ void drawScene(Shader *shader, bool isShadowPass){
     shader->setMat3("modelInvTra", glm::inverse(glm::transpose(glm::mat3(model))));
     shader->setMat4("view", view);
     floorModel->Draw(*shader);
+
 
     // draw wheel
     model = glm::translate(glm::mat4(1.0f), glm::vec3(-.7432, .328, 1.39));
