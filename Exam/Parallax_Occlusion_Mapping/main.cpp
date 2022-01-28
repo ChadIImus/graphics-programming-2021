@@ -46,14 +46,11 @@ Shader* normalShader;
 Shader* parallaxShader1;
 Shader* parallaxShader2;
 Shader* parallaxShader3;
+Shader* parallaxShader4;
 
-Model* carPaint;
-Model* carBody;
-Model* carInterior;
-Model* carLight;
-Model* carWindow;
-Model* carWheel;
-Model* floorModel;
+Model* bricksModel;
+Model* pebblesModel;
+Model* bricks2Model;
 
 Shader* skyboxShader;
 unsigned int skyboxVAO;
@@ -85,7 +82,7 @@ struct Config {
 
     // light 1
     glm::vec3 lightPosition = {-3.0f, 3.0f, -1.0f};
-    glm::vec3 lightDirection = {2.7f, -1.0f, 0.7f};
+    glm::vec3 lightDirection = {2.7f, -0.8f, 0.7f};
     glm::vec3 lightColor = {0.85f, 0.8f, 0.6f};
     float lightIntensity = 0.75f;
 
@@ -119,7 +116,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Exercise 12 - Shadow mapping", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Exam project - Parallax occlusion mapping", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -151,16 +148,13 @@ int main()
     parallaxShader1 = new Shader("shaders/shader.vert", "shaders/parallax.frag");
     parallaxShader2 = new Shader("shaders/shader.vert", "shaders/parallax2.frag");
     parallaxShader3 = new Shader("shaders/shader.vert", "shaders/parallax3.frag");
+    parallaxShader4 = new Shader("shaders/shader.vert", "shaders/parallax4.frag");
     normalShader = new Shader("shaders/shader.vert", "shaders/shader.frag");
 
     sceneShader = normalShader;
-    carPaint = new Model("car/Paint_LOD0.obj");
-	carBody = new Model("car/Body_LOD0.obj");
-	carLight = new Model("car/Light_LOD0.obj");
-	carInterior = new Model("car/Interior_LOD0.obj");
-	carWindow = new Model("car/Windows_LOD0.obj");
-	carWheel = new Model("car/Wheel_LOD0.obj");
-	floorModel = new Model("floor/bricks.obj");
+    bricksModel = new Model("floor/bricks.obj");
+    pebblesModel = new Model("floor/pebbles.obj");
+    bricks2Model = new Model("floor/bricks2.obj");
     skyboxShader = new Shader("shaders/skybox.vert", "shaders/skybox.frag");
     simpleDepthShader = new Shader("shaders/shadowmapping_depth.vert", "shaders/shadowmapping_depth.frag");
 
@@ -239,6 +233,8 @@ int main()
         } else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS){
             sceneShader = parallaxShader3;
         } else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
+            sceneShader = parallaxShader4;
+        } else if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) {
             sceneShader = normalShader;
         }
 
@@ -266,14 +262,6 @@ int main()
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-	//delete carModel;
-	delete floorModel;
-	delete carWindow;
-	delete carPaint;
-	delete carInterior;
-	delete carLight;
-	delete carBody;
-    delete carWheel;
     delete sceneShader;
     delete skyboxShader;
     delete simpleDepthShader;
@@ -441,51 +429,15 @@ void drawScene(Shader *shader, bool isShadowPass){
     shader->setMat4("model", model);
     shader->setMat3("modelInvTra", glm::inverse(glm::transpose(glm::mat3(model))));
     shader->setMat4("view", view);
-    floorModel->Draw(*shader);
-
-
-    // draw wheel
-    model = glm::translate(glm::mat4(1.0f), glm::vec3(-.7432, .328, 1.39));
-    shader->setMat4("model", model);
-    shader->setMat3("modelInvTra", glm::inverse(glm::transpose(glm::mat3(model))));
-    carWheel->Draw(*shader);
-
-    // draw wheel
-    model = glm::translate(glm::mat4(1.0f), glm::vec3(-.7432, .328, -1.296));
-    shader->setMat4("model", model);
-    shader->setMat3("modelInvTra", glm::inverse(glm::transpose(glm::mat3(model))));
-    carWheel->Draw(*shader);
-
-    // draw wheel
-    model = glm::rotate(glm::mat4(1.0f), glm::pi<float>(), glm::vec3(0.0, 1.0, 0.0));
-    model = glm::translate(model, glm::vec3(-.7432, .328, 1.296));
-    shader->setMat4("model", model);
-    shader->setMat3("modelInvTra", glm::inverse(glm::transpose(glm::mat3(model))));
-    carWheel->Draw(*shader);
-
-    // draw wheel
-    model = glm::rotate(glm::mat4(1.0f), glm::pi<float>(), glm::vec3(0.0, 1.0, 0.0));
-    model = glm::translate(model, glm::vec3(-.7432, .328, -1.39));
-    shader->setMat4("model", model);
-    shader->setMat3("modelInvTra", glm::inverse(glm::transpose(glm::mat3(model))));
-    carWheel->Draw(*shader);
-
-    // draw the rest of the car
-    model = glm::mat4(1.0f);
-    shader->setMat4("model", model);
-    shader->setMat3("modelInvTra", glm::inverse(glm::transpose(glm::mat3(model))));
-    carBody->Draw(*shader);
-    carInterior->Draw(*shader);
-    carPaint->Draw(*shader);
-    carLight->Draw(*shader);
-
+    bricksModel->Draw(*shader);
+    pebblesModel->Draw(*shader);
+    bricks2Model->Draw(*shader);
     if(isShadowPass)
         return;
 
     // we don't draw the transparent objects to the shadow map so that they don't cast shadows
-    glEnable(GL_BLEND);
-    carWindow->Draw(*sceneShader);
-    glDisable(GL_BLEND);
+    //glEnable(GL_BLEND);
+    //glDisable(GL_BLEND);
 }
 
 void drawSkybox(){

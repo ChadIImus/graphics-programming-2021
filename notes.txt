@@ -1,0 +1,659 @@
+lecture 1:	Introduction to computer graphics and OpenGL
+
+	uses:
+		Games
+		Information visualization
+		Medical visualization
+		Scientific visualization
+		Industrial design
+		Human computer interaction (ux)
+		Animation
+		Special effects
+		Training (emulation of real environment)
+		AR and VR
+
+
+    List the basic elements of a virtual scene
+    	
+    	Objects:
+    		the objects in the scene to be rendered, boxes, buildings, dynosaures etc.
+    	
+    	Viewer:
+    		The camera that absorbs light to make an imprint of the real scene and objects.
+    		It is upside down, because light from below will hit the top of the "eye" or sensor as 
+    		it travels through the iris.
+
+    	Light sources:
+    		The sources of light that produce photons which bounces off the scenes objects and 
+    		geometry and into the viewer's eyes.
+
+    Describe why we only control the emission of three frequencies of light, and why it works
+    	Our eyes only have 3 cones for detecting light, red blue and green.
+    	And all other colors we be registered as a mix of the signals from these cones, so any
+    	mix of light between these cones will replicate that light.
+
+    Describe the difference between additive and subtractive colors
+    	additive light:
+    		take no light and color it with green red and blue
+    	subtractive light:
+    		take white light and filter it with yellow magenta and cyan.
+
+    List advantages and disadvantages of raster graphics and ray tracing  
+    	Raster graphics:
+    		image produced as an array (the raster) of picture elements (pixels) in the frame buffer
+
+    	Ray tracing:
+    		Follow rays of light from a point source(light source) until it hits the cameras lens.
+    		Each ray of light will most likely interact with many objects, making the photon "colored"
+    		by the surronding environment, not just the last thing it hit.
+    		Rays will either bounce around until all their energy is "absorbed" or it goes off into infinity.
+
+    local lighting:
+    	Local illumination – idea that objects are only illuminated directly by the light sources
+
+    global lighting:
+		Global illumination – idea that objects do not only reflect light to the viewer, but also to other objects
+
+    List the basic primitives used for rendering. Explain why we almost exclusively render triangles.
+    	polygons:
+    		simple (non self intersecting)
+    		Convex
+
+    	Points:
+    		points have a center and a radius, usually used for particles or circles
+    	
+    	Lines:
+    		Two points connected by a "line" of pixels
+
+    	Lights:
+    		Light sources
+
+    	Triangles:
+    		Three points with lines going between them and filled in.
+    		Every concievable polygon can be made with an amount of triangles, 
+    		we therefore render everything as an enourmous amount of triangles. 
+
+
+    Describe what VBO, EBO, VAO and handles stand for when developing with modern OpenGL.
+    	VBO:
+    		It is the "Vetex Buffer Object", and it holds the vertex information for
+    		a VAO. The vertex information is the positions in world space that the VAO knows.
+
+    	EBO:
+    		It is the "Element Buffer Object" that hold in which order the points in the VBO should be drawn.
+    		Then depending of the primitive stated to be drawn, every one index is interpreted as a point, 
+    		or every two indeices as a line or every three indices as a triangle.
+    	
+    	VAO:
+    		It is the "Vertex Array Object" that hold vetex attribute pointers, pointers to VBOs
+    		EBO's and much other configuration with which to draw our scene. (how to read the VBO).
+    		Different VAO's can reference the same EBO's and VBO's but rendered in a different way or order.
+
+
+lecture 2: Shader basics
+
+    Describe what are shaders and list the types of shaders
+    	Shaders:
+    		Code that runs on a gpu in parallel
+    		Usually works with only one data item at a time (that is not a global or uniform)
+    		Cannot "communicate" with other "threads"
+
+    	Types:
+    		Vertex shader:
+    		fragment shader:
+
+    		*uvigtig*
+    		Geometry shader:
+    		Tesselation shaders:
+    		Compute shaders:
+
+
+    Explain the difference between vector and fragment shaders:
+        Vertex shader:
+        	Vertex shaders takes an input vertex along with information,
+        	and runs some arbitrary code, like morphing or moving or ofsetting vertex
+        	placement, and outputs information for later steps along with the final vertex
+        	placement.
+
+    		Moving vertices, morphing/wave motion/fractals
+    			Lighting???
+
+    	fragment shader:
+    		Takes interpolated information from the vertex shader 
+    		(usually color between the vertices of a primitive),
+    		and applies some arbitrary code to it and output the final color for that fragment.
+
+    		per fragment lighting calculation
+
+    		Texture mapping:
+    			Enviroment mapping
+    			Bump mapping (normal mapping)
+    			Parallax mapping
+
+    List basic uses of vector and fragment shaders:
+    	above
+
+    Describe what the const, in, out, inout, and uniform qualifiers mean in GLSL:
+    	const compile time constant
+    	in, input from the apllication program
+    	out, output from the shader to the next stage (usually fragment shader?)
+    	uniform, global variable with the same values across the entire primitve(sometimes entire VAO)
+
+    Describe what swizzling is and how it is useful:
+    	swizzling refers to a vectors components and how we can access them through their names like
+    	vec3.xyz. vec3.xy and so on, also for color vectors! vec3.rgb, vec3.rb
+
+    [måske mere matematik]
+
+
+lecture 3: Geometric transformations
+
+    Name and describe the geometric transformations seen in class
+    	Translation:
+    		Move point a by vector(x,y,z) amount
+
+    	Shearing:
+    		Shearing stretches an object perpandicular to one axis and leths the points follow linearly
+    		Parallellism is conserved, but angles and lengths are not!
+
+    	Scaling:
+    		Reduce/increase the size/length of the line/triangle
+
+    	Rotation:
+    		Rotate points around a pivot point
+
+    Explain what homogenous coordinates are and why we need them in geometric transformations
+    	Homogenous coordinates:
+    		They are 4 dimensional coordinates (as they are R^n+1 where R^3 is the three dimensions we normally draw).
+    		This is because when the matrix for these transformations are constructed we will have an aditional axis 
+    		to put the translation into, and because of how matrices work this means that translation 
+    		is now also multiplicative.
+
+    	Why:
+    		We need them because the main 4 geometric transformations are different,
+    		translation is *additive* while the rest are *multiplicative* meaning that
+    		the matrix's can't be combined and translation must be handled separately
+    		with a special case. This is solved with homogenous coordinates.
+
+    Describe how you can recognize if a transformation matrix is a rotation, scale, sheer or translation
+    	The identity matrix (in 2 dimensional homogenous coordinates aka 3d) is
+    	(1, 0, 0)
+    	(0, 1, 0)
+    	(0, 0, 1)
+
+    	The modified identity matrix with delta x and delta y translatlation:
+    	(1, 0, dx)
+    	(0, 1, dy)
+    	(0, 0,  1)
+
+    	The modified identity matrix to scale x and y:
+    	(sx, 0, 0)
+    	(0, sy, 0)
+    	(0,  0, 1)
+
+    	The modified identity matrix to rotate x and y by θ angle:
+    	(cos θ, -sin θ, 0)
+    	(sin θ,  cos θ, 0)
+    	(0,          0, 1)
+
+    	The modified identity matrix to perform an x shear:
+    	(1, shx, 0)
+    	(0,   1, 0)
+    	(0,   0, 1)
+    	Alternatively y shear:
+    	(  1, 0, 0)
+    	(shy, 1, 0)
+    	(  0, 0, 1)
+
+    	The great thing about this is that now all these transformation can be combined into one matrix
+    	and applied to a point to perform all the transformation at once.
+
+
+lecture 4: Geometric transformations 2
+	
+	Transpose matrix:
+		normal matrix:
+		(r11, r12, r13)
+		(r21, r22, r23)
+		(r31, r32, r33)
+
+		transposed:
+		(r11, r21, r31)
+		(r12, r22, r32)
+		(r13, r23, r33)
+
+		if a matrix is orthogonal then:
+		matrix m * transposed matrix m = the unit/identity matrix:
+		(1, 0, 0)
+    	(0, 1, 0)
+    	(0, 0, 1)
+
+    	This also means that it is easy to find the inverse of an orthogonal matrix.
+    	Because matrix m multiplided by it's inverse is equal to the unit matrix.
+
+    Describe the properties of an orthonormal matrix¨:
+    	Orthogonal matrices:
+    		Each rows length must sum to 1 (to be a unit vector)
+    		Each Row must be perpendicular to all other rows in the matrix
+    		Each column considered considered as a vector must be a unit vector
+    		Each column must be perpendicular to all other colums in the matrix
+
+    	Orthonormal matrix:
+    		If two of the cloumns are considered as vectors and they are perpendicular
+    		and are unit length, the matrix is considered orthonormal.
+
+    		It is useful because it helps us calculate the transformation from local to world coordinates
+    		fx for a plane, by using the DOF.
+
+    		We want to know the matrix:
+    		(r1x, r1x, r1x)
+			(r2y, r2y, r2y)
+			(r3z, r3z, r3z)
+
+
+    Explain what we mean with basis vectors, and how it relates to coordinate frames/spaces:
+    	Basis vectors:
+    		They are vectors where one element (dimension/axis) is 1 and the rest are 0
+    		So in a way they are like unit vectors.
+    		Unit vectors are where the length is 1, but the elements individually are not 
+    		necesseraly 1. basis vectors are also unit vectors
+
+    	Frames/spaces relation:
+    		Transform local to world coordinates
+
+    Describe the process to create a coordinate frame/space:
+    	Use DOF to make first,
+    	use first and the wY matrix to make the second,
+    	make the third with crossproduct of first and second, correct handed way.
+
+    Describe how we can transform from one coordinate frame/space to another
+    	multiply by this matrix
+
+
+lecture 5: Cameras and projections
+
+    Explain the difference between orthogonal and perspective projection:
+    	Orthographic projection:
+    		It is projection onto a plane by throwing away the coordinate not related to that plane.
+    		This creates *a* projection, but it is flat and does not consider how *far* the objects or points
+    		are from the plane/camera
+    		The view volume is a square
+
+    	Perspective projections:
+    		They project onto a flat surface with points further away that are smaller than those that are close
+    		this gives the idea of depth on the final projection image.
+    		The view volume is a pyramin or square cone if the projection plane is far from the camera pos.
+
+    Explain what we mean by “view volume” in computer graphics:
+    	The view volume is the volume in which if objects/lines/triangles are inside of 
+    	then they will be drawn.
+
+    Explain why we think of projection in terms of homogeneous coordinates:
+    	All the times where we want to divide the points/vectors by something
+    	we put it in the fourth row in the homogenous coordinates because
+    	we know that to get back to euclidian space we need to devide by the fourth dimension.
+
+
+    Describe what are the elements in a projection matrix:
+    	View reference point (camera pos):
+    	View plane normal (the direction in which we are looking)
+    	the normal of the plane perpendicular with the view direction
+    	View Up vector, the direction of "Up" also it is perpendicular with the vpn
+
+    	Projection Reference Point (also camera pos??? off)
+    	Direction of projection
+
+
+    	Translate the view reference point into the origin
+    	Rotate the Eye Coordinate System so it coinsides with the World Coordinate System
+    	Translate the Projection Reference point into the origin
+    	Shear so the center line of the View Volume Becomes the Z-axis
+    	Scale to the Canonical Perspective View Colume
+
+
+    Describe the process to create the view matrix. Is it is different than creating a generic coordinate frame/space?:
+    	an example of using frame/space is from local to world transformation, this is much different as it moves/translates
+    	an object and then usually rotates. A view matrix is a projection onto a view coordinate system with a shear to make *closer*
+    	objects appear bigger.
+
+    Describe the difference between the view and projection matrices
+    	Is the view projection with the perspective divide?
+    	Projection matrix is from world coordinates to camera coordinates    	
+
+    Explain what is the role of the “perspective divide” step in the graphics pipeline.
+    	It is amount transforming the projected coordinates in the view volume 
+    	into the normalized device coordinates for -1 to 1.
+
+
+lecture 6: Raster graphics: scan-conversion
+
+
+	four cases:
+		a < 1
+			only one pixel per coloumn
+		a > 1
+			only one pixel per row
+		a > -1 
+			onle one pixel per coloumn
+		a < -1 
+			only one pixel per row
+
+    Describe the basic idea of scan conversion in computer graphics.
+    	The basic idea is the convert graphics objects like points, lines and triangles
+    	into fragments or pixels so that they can be rendered onto a screen.
+
+    Explain why scan conversion is necessary, and where it fits in the raster graphics pipeline.
+    	Our math and objects can essentially have infinite resultion, in a way, and we must have 
+    	a way to convert from this infinite space onto a limited amount of fragments present on
+    	our computer screen (their resolution).
+    	The rasterization happens after the primitives have been assembled, so that they can be
+    	rasterized and then these fragments, along with other input that might be interpolated,
+    	is input into the fragment shader which then outputs the final color for that fragment.
+
+    Explain why we do not need scan conversion in pure ray tracing.
+    	There is no need to rasterize primitives when you use rays to figure out what fragments' colors should be
+    	Instead of shoving objects into fragments, we shoot rays out from fragments and see which objects it hits
+    	and these objects color based on the path the ray took to a light source.
+
+    Explain why we prefer more complicated algorithms, that rely on integer numbers, over simpler solutions, that rely on float numbers.
+    	Rounding to integers takes too much cpu time
+    	so using floating point variables is impractical when working with fragments that need to definetly be a pixel at the end.
+
+    Outline the steps in the scan conversion of a triangle, and the common problems that it has to handle.
+    	First we perform three scan conversions of the three sides of the triangle, filling in the pixels'
+    	color with linear interpolation between the two ends of the the line.
+
+    	Then we sort the fragments into an array of arrays where we give a y coordinate and get the
+    	x positions that contain filled fragments.
+
+    	Now we go from top to bottom filling in the blanks in the triangle with linear interpolation between
+    	the two sides of the gaps.
+
+    	Now we have alle the information to draw our rasterized triangle.
+
+
+lecture 7: Raster graphics: Interpolation and the Z-buffer
+
+    Explain how the z-buffer algorithm works, why we need a z-buffer, and what kind of problems we can have with and without a z-buffer
+    	The z-buffer algorithm finds the surfaces that should be rendered, so it filters out the hidden surfaces with 
+    	the use of a z or depth buffer.
+
+    	hard depth sort alogrithm cookbook:
+    		1. Sort according to the polygons that have a vertex furthest away in the z dimension
+    		2. Take the polygon currently at the far end of the sorted list be named P
+    		3. Before this polygon is scan converted, test against any q polygon closer
+    			than polygon p and see if their z-extent (the range of their z-dimension) overlap.
+    		4. perform 5 tests to see if you can draw polygon p before polygon q
+    		5. if one test suceeds we can draw p before q and we move on to the next polygon q
+    		6. if all q polygons pass, p can be drawn now and we move on to the next polygon in the list
+
+    		tests:
+    			1. Do the polygons' x extent not overlap?
+    			2. Do the polygons' y extent not overlap?
+    			3. Is P entirely on the opposite sife of Q's plane form the viewpoint?
+    			4. Is Q entirely on the opposite sife of P's plane form the viewpoint?
+    			5. Do the projections ofthe polygons onto the (x,y) plane not overlap?
+
+    	A z-buffer is a buffer with the depth of the current fragment drawn on that pixel
+    	the higher the value, the closer the fragment. 
+    	If a new value is the same as an old, (this is z-fighting, when the pixels flicker because their hight is the same)
+    	you must choose if either the old or the new should be written. We choose the newest.
+
+    	But before you even get there, you must have the depth of every fragment produced,
+    	this can be done with linear-interpolation between the points on the triangle,
+    	like when the triangle is scan converted.
+
+    	There is an issue with using linear interpolation when we used pespektive projection.
+    	If triangles are small we won't notice, but opengl got us covered with perspektive projection.
+    	(turned on by befault)
+
+    	Uses more memory, but only has one test, that being depth
+	    	
+    	If we do not use a z-buffer and draw all surfaces in the view volume, we would have essentially a random image at the
+    	end, as we do not know which surface will be drawn last, on top of all the others.
+
+    List common attributes of vertices, as these are prepared to be handled by a vertex shader
+    	World coordinates of a vertex
+    	World normal of a vertex
+    	Color of a vertex
+    	Screen coordinates of a vertex?
+
+    	When the three corners of a triangle are defined,
+    	the order matters, if they are defines clockwise 
+    	you are looking at the front, anti-clockwise
+    	you look at the back.
+
+    Explain how linear interpolation is used in rendering, and why we cannot use it to interpolate vertex attributes in screen space (i.e. after rasterization)
+    	it is used to interpolate any and all attributes that vertices have so that they can be used in the fragment shader maybe
+    	linear interpolation is not accurate when the perspektive transformation has been applied, so it might be because of that.
+
+    Explain what is hyperbolic interpolation, and why it produces perspective corrected interpolation when we interpolate in screen space (remember, in the 90’s we did not have that, which is why we see wobbly graphics in the PS1)
+    	The interpolation is non linear kekw
+
+    Describe the steps in applying hyperbolic interpolation, as it integrates in the graphics pipeline
+
+
+lecture 8: Rendering: Lighting
+
+    Describe the practical difference between “reflection model” and “shading model”, as used in computer graphics.
+    	The reflection model refers to how we model how light reflects off the surface of an object
+    	The shading model refers to how we use the reflection model to shade the colors on the surfaces
+
+    List and describe the components in the Phong’s reflection model
+
+    	Ambient reflection
+    		Indirect lighting caused by essentially random bounces around the environment
+    		without actually simulating the bounces.
+
+    		ambient occlusion:
+    			surronding objects darken a spot
+
+    	Diffuse Reflection
+    		models reflections from matte surfaces
+    		It is reflected equally well in all directions
+    		Not physically accuarte, it should scatter in the subsurface and out somewhere nearby
+    		This can be statistically modeled
+
+    		reflection energy in a direction is porportional to the area between the direciton
+    		and the normal of that surface. The projected area, described last sentence, is the the area seen from a direction,
+    		and it is porpotional to cos of the angle.
+    		 lamberts law, all light energy is diffused equally 
+
+
+    	Specular Reflection
+    		Models reflections from mirror like surfaces, or "shiny" surfaces
+
+    		Usually mirror only reflect in a very narrow cone around the vector R that is angle θ away from the normal
+    		where θ is the angle between the incoming vector L and the normal of the surface. L, R and N are in the same plane.
+    		R is really L mirrored around the normal N.
+    		The angle between the view direction vector V and the vector R is A, and the that is "felt" in the view direction
+    		is porportional to cov^N of angle A, where n is a factor of how shiny the surface is. This means that the further 
+    		away the view direction is from R, the less it will "feel".
+
+    	post processing:
+    		Attenuation:
+    			light intensity falls off with the square of the distance 
+    			from the light source to the object
+    			(idiffuse + i specular) * 1/d^2 (too much usually)
+
+    		Atmospheric attenuation/depth cueing
+    			objects further away are more bluish
+    			and objects further away are darker
+    			we can clam linear interpolation to darken/bluify the color result of phong
+
+
+    List the variables required to compute the Phonq reflection model and describe their roles
+    	l = lambient + ldiffuse + lspecular
+    	l = la*ka + lp*kd(N dotproduct L) lpks (R dotproduct V)^n
+    	
+    	n = a constant for "shinyness"
+    	R = light in direction
+    	N = normal of surface
+    	L = mirror R around N
+    	V = view direction
+
+    Explain the difference between flat shading, Gouraud shading, and Phong shading, and how these relate to the graphics pipeline.
+    	include how much a "color" wavelength is reflected in the reflection model called O
+    	We cheat and only use three colors RGB, which is also the colors of our screens.
+    	We could also use CMY with Cyan Magenta and Yellow to use subtractive colors.
+    	RBG considered as a vector, will have two vectors that are close in vector space,
+    	will not be close to what we perceive as close colors.
+
+        shading:
+    		Flat shading
+    			use phongs reflection model once
+    			refers to shading where the shading only uses one normal, that being the average
+    			of the three normals given with the triangles' vertices.
+    		
+    		Gouraud Shading
+    			use phong reflection model on the three vertices i1,i2,i3 and linearly interpolate like in scan conversion
+
+    		Phong shading
+    			interpolate the normals like in scan conversion and use phong reflection model on each fragment
+
+
+lecture 9: Rendering: Textures and materials
+
+    Explain what are textures, and why they are important in computer graphics.
+    	Textures are pictures or 2d arrays of color information. These have various uses, 
+    	but is commonly wrapped around vertices and triangles to give them colors for each fragment that is not interpolated.
+
+    Explain what texture mapping is, and how it can enhance the visual aspect of rendered objects.
+    	we can define points on the texture as "connected" to the vertices as attributes,
+    	so they can be used to linearly interpolate these connected points so we can sample the textures
+    	to get the color for fragments with these interpolated values. This effectively "wraps" the textures
+    	around vertices. These attributes are also called UV's.
+
+    common uses:
+    	we can use a reflection map to pretend to do reflections
+    	lighting map to differentiate reflectiveness
+    	bump mapping, the normal at each point, making reflections of light much more realistic
+    	it can pretend to have depth.
+    	Parallax mapping
+
+
+    List and describe common texture sampling problems.
+    	keeping track of the different coordinate systems and their transformations
+    	use tangent space.
+
+    	projection on different shapes, it is usually distorted
+
+    	aliasing errors when sampling only some of the texture, a solution is area averaging
+    	this is slower because of more memory access.
+
+
+
+    Explain what is the idea behind mipmapping, and why and when it can improve texture sampling quality.
+    	we have a problem when a texel is larger than the texture and vice versa
+    	To solve this, the gpu implements mipmapping where it calculates the texel to pixel ratio
+    	and the higher it is, the less resolution is needed
+
+    	this can be used in trilinear filtering where it interpolates between these levels created by the different leves or ratios of texels to pixels
+    	powers of two
+
+
+    Explain how textures can be used to “bake” scene illumination and/or material attributes, and why these methods are sometimes preferred.
+    	instead of actually calculating lighting or similar things on the fly it can be "baked" and stored in a texture.
+    	This can make the program faster but consume a bit more memory.
+
+
+lecture 10: rendering with ray-tracing
+
+    Describe how ray-tracing is used to render 3D scenes in computer graphics
+    	ray tracing casts rays out from every fragment to fill them with the rays.
+    	The rays will usually have some sort of bounce limit so that they don't continue forever
+    	if they don't hit anything they will be black, and if they reach a light source then the ray will be brighter
+
+    Explain the differences between ray-traced and raster graphics.
+    	ray-traced graphics are conceptually much simpler than rasterization
+    	as rasterization has to perform a lot of tricks to achieve similar results
+    	the main difference is then compleksity for rasterization and computer cycles 
+    	used for ray-tracing.
+
+    you can sample more than one ray per fragment
+    wehn reflecting you can cast out more rays
+
+    List and explain advantages and disadvantages of ray-tracing as compared to raster graphics.
+    Implement the main functions of a simple ray-tracing rendering pipeline.
+
+
+lecture 11: Rendering: Discrete techniques
+
+    Explain how and why textures are used to represent material attributes. List common material information that is represented with textures.
+   		because rasterization we end up with 2d information
+
+   		normals of surfaces to "perturb" light shinyness reflections
+
+   		refelction/environment mapping
+   		cube maps
+   			direction(vector)
+   		
+   		refraction maps
+   			index of refraction for two mediums
+   			and an incident angle
+   			only entry refraction, no exit refraction
+
+   			schlick approximation of fresnel effect
+   				based on angle mix refraction and reflection
+
+   			chromatic aberration
+   				compute different refraction based on different colors and merge them
+
+    Describe what is normal mapping, what are its strengths and weaknesses.
+    	normal mapping is used to bend reflections according to the normal of the surface/fragment hit by the light,
+    	thus creating an illusion of depth
+
+    Explain what tangent space is, and how it is used in normal mapping.
+    	a space lokal to texture, it is computed through the object and the texture
+    	so that we can tranform from world to tangent space.
+
+    Explain what environment mapping is, how it is used to produce reflection and refraction, and what are the limitations.
+    	Environment mapping is used when we don't want to actually calculate where a refraction would go after entering/hitting
+    	an object, so we store a cube map of the environment around it to sample instead.
+    	It cannot respond to dynamic changes in the environment like player movement og object movement
+    	there are no self reflections, as the model itself is not part of the environment map
+
+    Explain why reflection and refraction are impractical in the raster graphics pipeline.
+    	essentially the same as ray tracing, so it's expensive
+
+lecture 12: Rendering: Shadows and deferred shading
+
+	List the shadow techniques seen in class.
+		blob shadows
+		shadow columes, exact shadow projections using stencil buffer
+		shadow maps
+		projective shadows projected onto a flat surface
+			only works on a plane
+			one projection per surface
+
+    Describe the shadow mapping algorithm.
+    	A shadow map is made by projecting a light sources view into a view volume, 
+    	and stores how far away everything is from this light source in a shadow map.
+
+    	Then we check how far away a fragment is from that source of light, convert
+    	it to color and compare to the shadow map, if that color is darker then it is in shadow.
+
+    	render the triangles twice
+    	and one shadow map for each lightsource
+    	shadow acne, because of float values comparison can be "solved" with a bias towards shadow
+    	the shadows are "hard" so no smooth shadow transition from in shadow to not
+    	we can sample neighboring shadowmap texels and average
+
+    Explain how forward shading and deferred shading work, and what is the difference between them.
+    	forward shading is normal shading
+    	deferred shading works in two passes by finding all rendered pixels that we want to render
+    	and then shade only those triangles.
+
+    Explain what are “render targets” in OpenGL, and how they are used in shadow mapping and deferred shading.
+    	render targets are different geometry information stored in various maps to finally piece them together to a final framebuffer
+
+Ray tracing rendering:
+
+Lighting - reflection and shading models:
+
+2d textures:
+
+Discrete techniques:
+
+Shadows and deferred shading:
+

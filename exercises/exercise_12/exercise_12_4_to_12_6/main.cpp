@@ -42,7 +42,7 @@ Model* carInterior;
 Model* carLight;
 Model* carWindow;
 Model* carWheel;
-Model* floorModel;
+Model* bricksModel;
 
 unsigned int gBuffer;
 unsigned int gPosition, gNormal, gAlbedoSpec;
@@ -134,7 +134,7 @@ int main()
 	carInterior = new Model("car/Interior_LOD0.obj");
 	carWindow = new Model("car/Windows_LOD0.obj");
 	carWheel = new Model("car/Wheel_LOD0.obj");
-	floorModel = new Model("floor/floor.obj");
+    bricksModel = new Model("floor/floor.obj");
 
     shaderGeometryPass = new Shader("shaders/g_buffer.vert", "shaders/g_buffer.frag");
     shaderLightingPass = new Shader("shaders/deferred_shading.vert", "shaders/deferred_shading.frag");
@@ -270,7 +270,7 @@ int main()
     ImGui::DestroyContext();
 
 	//delete carModel;
-	delete floorModel;
+	delete bricksModel;
 	delete carWindow;
 	delete carPaint;
 	delete carInterior;
@@ -578,7 +578,7 @@ void drawScene(Shader *shader, bool isShadowPass){
     shader->setMat4("model", model);
     shader->setMat4("modelInvT", glm::inverse(glm::transpose(model)));
     shader->setMat4("view", view);
-    floorModel->Draw(*shader);
+    bricksModel->Draw(*shader);
 
     // draw wheel
     model = glm::translate(glm::mat4(1.0f), glm::vec3(-.7432, .328, 1.39));

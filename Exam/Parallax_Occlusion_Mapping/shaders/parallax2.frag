@@ -100,8 +100,9 @@ void main()
     vec3 viewDir = normalize(fs_in.CamPos_tangent - fs_in.Pos_tangent);
     vec2 texCoords = ParallaxMapping(fs_in.textCoord, viewDir);
 
-    if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
-    discard;
+    //doesn't work when using repeated floor texture
+    //if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
+    //discard;
 
     // TEXTURE SAMPLING
     // diffuse texture sampling and material colors

@@ -40,7 +40,7 @@ Shader* gouraud_shading;
 Shader* phong_shading;
 Model* carModel;
 Model* carWheel;
-Model* floorModel;
+Model* bricksModel;
 Camera camera(glm::vec3(0.0f, 1.6f, 5.0f));
 
 // global variables used for control
@@ -130,7 +130,7 @@ int main()
     shader = phong_shading;//gouraud_shading;
     carModel = new Model(std::vector<string>{"car/Body_LOD0.obj", "car/Interior_LOD0.obj", "car/Paint_LOD0.obj", "car/Light_LOD0.obj", "car/Windows_LOD0.obj"});
     carWheel = new Model("car/Wheel_LOD0.obj");
-    floorModel = new Model("floor/floor.obj");
+    bricksModel = new Model("floor/floor.obj");
 
     // set up the z-buffer
     // -------------------
@@ -182,7 +182,7 @@ int main()
     ImGui::DestroyContext();
 
     delete carModel;
-    delete floorModel;
+    delete bricksModel;
     delete carWheel;
     delete gouraud_shading;
     delete phong_shading;
@@ -340,7 +340,7 @@ void drawObjects(){
     shader->setMat4("model", model);
     invTransposeModel = glm::inverse(glm::transpose(model));
     shader->setMat4("invTransposeModel", invTransposeModel);
-    floorModel->Draw();
+    bricksModel->Draw();
 
 }
 

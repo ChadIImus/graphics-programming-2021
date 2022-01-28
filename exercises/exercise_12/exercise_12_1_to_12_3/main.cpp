@@ -46,7 +46,7 @@ Model* carInterior;
 Model* carLight;
 Model* carWindow;
 Model* carWheel;
-Model* floorModel;
+Model* bricksModel;
 
 Shader* skyboxShader;
 unsigned int skyboxVAO;
@@ -142,7 +142,7 @@ int main()
 	carInterior = new Model("car/Interior_LOD0.obj");
 	carWindow = new Model("car/Windows_LOD0.obj");
 	carWheel = new Model("car/Wheel_LOD0.obj");
-	floorModel = new Model("floor/floor.obj");
+    bricksModel = new Model("floor/floor.obj");
     skyboxShader = new Shader("shaders/skybox.vert", "shaders/skybox.frag");
     simpleDepthShader = new Shader("shaders/shadowmapping_depth.vert", "shaders/shadowmapping_depth.frag");
 
@@ -240,7 +240,7 @@ int main()
     ImGui::DestroyContext();
 
 	//delete carModel;
-	delete floorModel;
+	delete bricksModel;
 	delete carWindow;
 	delete carPaint;
 	delete carInterior;
@@ -405,7 +405,7 @@ void drawScene(Shader *shader, bool isShadowPass){
     shader->setMat4("model", model);
     shader->setMat3("modelInvTra", glm::inverse(glm::transpose(glm::mat3(model))));
     shader->setMat4("view", view);
-    floorModel->Draw(*shader);
+    bricksModel->Draw(*shader);
 
     // draw wheel
     model = glm::translate(glm::mat4(1.0f), glm::vec3(-.7432, .328, 1.39));

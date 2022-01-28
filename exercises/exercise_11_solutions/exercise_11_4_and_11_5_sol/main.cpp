@@ -43,7 +43,7 @@ Model* carInterior;
 Model* carLight;
 Model* carWindow;
 Model* carWheel;
-Model* floorModel;
+Model* bricksModel;
 
 Shader* skyboxShader;
 unsigned int skyboxVAO; // skybox handle
@@ -127,7 +127,7 @@ int main()
 	carInterior = new Model("car/Interior_LOD0.obj");
 	carWindow = new Model("car/Windows_LOD0.obj");
 	carWheel = new Model("car/Wheel_LOD0.obj");
-	floorModel = new Model("floor/floor.obj");
+    bricksModel = new Model("floor/floor.obj");
     skyboxShader = new Shader("shaders/skybox.vert", "shaders/skybox.frag");
 
     // init skybox
@@ -194,7 +194,7 @@ int main()
     ImGui::DestroyContext();
 
 	//delete carModel;
-	delete floorModel;
+	delete bricksModel;
 	delete carWindow;
 	delete carPaint;
 	delete carInterior;
@@ -405,7 +405,7 @@ void drawScene(){
     glm::mat4 model = glm::scale(floorTransform, glm::vec3(1.f, 1.f, 1.f));
     shader->setMat4("model", model);
     shader->setMat3("modelInvTra", glm::inverse(glm::transpose(model)));
-    floorModel->Draw(*shader);
+    bricksModel->Draw(*shader);
 
     // this transform is applied to the whole car, you can use it to move the car
     glm::mat4 carTransform = glm::mat4(1.0f);

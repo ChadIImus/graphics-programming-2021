@@ -43,7 +43,7 @@ Model* carInterior;
 Model* carLight;
 Model* carWindow;
 Model* carWheel;
-Model* floorModel;
+Model* bricksModel;
 unsigned int floorTextureId;
 Camera camera(glm::vec3(0.0f, 1.6f, 5.0f));
 
@@ -141,7 +141,7 @@ int main()
 	carInterior = new Model("car/Interior_LOD0.obj");
 	carWindow = new Model("car/Windows_LOD0.obj");
 	carWheel = new Model("car/Wheel_LOD0.obj");
-	floorModel = new Model("floor/floor_no_material.obj");
+    bricksModel = new Model("floor/floor_no_material.obj");
 
     // set up the z-buffer
     glDepthRange(-1,1); // make the NDC a right handed coordinate system, with the camera pointing towards -z
@@ -193,7 +193,7 @@ int main()
     ImGui::DestroyContext();
 
 	//delete carModel;
-	delete floorModel;
+	delete bricksModel;
 	delete carWindow;
 	delete carPaint;
 	delete carInterior;
@@ -327,7 +327,7 @@ void drawFloor(){
     glm::mat4 invTranspose = glm::inverse(glm::transpose(view * model));
     floorShader->setMat4("invTranspMV", invTranspose);
     floorShader->setMat4("view", view);
-    floorModel->Draw(*floorShader);
+    bricksModel->Draw(*floorShader);
 }
 
 
